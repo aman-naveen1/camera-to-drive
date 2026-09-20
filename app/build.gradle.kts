@@ -5,7 +5,7 @@ plugins {
 
 android {
     namespace = "com.aman.camera2drive"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.aman.camera2drive"
