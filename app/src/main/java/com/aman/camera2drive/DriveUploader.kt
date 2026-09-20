@@ -4,6 +4,7 @@ import android.content.Context
 import com.google.auth.oauth2.AccessToken
 import com.google.auth.oauth2.GoogleCredentials
 import com.google.api.client.http.FileContent
+import com.google.api.client.http.HttpResponse
 import com.google.api.client.http.javanet.NetHttpTransport
 import com.google.auth.http.HttpCredentialsAdapter
 import com.google.api.client.json.gson.GsonFactory
@@ -83,12 +84,20 @@ class DriveUploader(private val context: Context) {
                     .create(metadata, FileContent("video/mp4", file))
                     .setFields("id,name")
 
-                request.getMediaHttpUploader()
+                val response: HttpResponse = request.getMediaHttpUploader()
                     .setDirectUploadEnabled(false)
                     .setChunkSize(5 * 1024 * 1024)
                     .upload(request.buildHttpRequestUrl())
 
+                // Google recommends checking the HTTP response before treating
+                // a resumable upload as successful. Never delete local footage
+                // on a non-2xx response.
+                val success = response.isSuccessStatusCode
+                response.disconnect()
+                if (!success) return false
+
                 // Never delete a segment until Drive confirms the upload.
+                // If deletion fails, keep the uploaded copy and avoid re-uploading it.
                 file.delete()
                 return true
             } catch (_: Exception) {
