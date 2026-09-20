@@ -19,7 +19,16 @@ class DriveUploader(private val context: Context) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     @Volatile private var running = false
 
+    init {
+        File(context.cacheDir, "segments")
+            .listFiles()
+            ?.filter { it.isFile && it.extension.equals("mp4", ignoreCase = true) }
+            ?.sortedBy { it.lastModified() }
+            ?.forEach { queue.add(it) }
+    }
+
     fun enqueue(file: File) {
+        if (!file.exists()) return
         queue.add(file)
         drain()
     }
@@ -31,12 +40,17 @@ class DriveUploader(private val context: Context) {
             try {
                 while (true) {
                     val file = queue.poll() ?: break
+                    if (!file.exists()) continue
+
                     if (!upload(file)) {
                         queue.add(file)
                         delay(10_000)
                     }
                 }
-            } finally { running = false }
+            } finally {
+                running = false
+                if (queue.isNotEmpty()) drain()
+            }
         }
     }
 
@@ -44,9 +58,13 @@ class DriveUploader(private val context: Context) {
         repeat(5) { attempt ->
             try {
                 val account = GoogleSignIn.getLastSignedInAccount(context) ?: return false
+
                 val credential = GoogleAccountCredential.usingOAuth2(
-                    context, listOf(DriveScopes.DRIVE_FILE)
-                ).apply { selectedAccount = account.account }
+                    context,
+                    listOf(DriveScopes.DRIVE_FILE)
+                ).apply {
+                    selectedAccount = account.account
+                }
 
                 val drive = Drive.Builder(
                     com.google.api.client.extensions.android.http.AndroidHttp.newCompatibleTransport(),
@@ -54,11 +72,21 @@ class DriveUploader(private val context: Context) {
                     credential
                 ).setApplicationName("DriveCam").build()
 
+                val folderId = getOrCreateFolder(drive)
+
                 val metadata = com.google.api.services.drive.model.File()
                     .setName(file.name)
                     .setMimeType("video/mp4")
-                drive.files().create(metadata, FileContent("video/mp4", file))
-                    .setFields("id,name").execute()
+                    .setParents(listOf(folderId))
+
+                val request = drive.files()
+                    .create(metadata, FileContent("video/mp4", file))
+                    .setFields("id,name")
+
+                request.getMediaHttpUploader()
+                    .setDirectUploadEnabled(false)
+                    .setChunkSize(5 * 1024 * 1024)
+                    .upload()
 
                 file.delete()
                 return true
@@ -67,5 +95,44 @@ class DriveUploader(private val context: Context) {
             }
         }
         return false
+    }
+
+    private fun getOrCreateFolder(drive: Drive): String {
+        val prefs = context.getSharedPreferences("drivecam", Context.MODE_PRIVATE)
+        val cachedId = prefs.getString("folder_id", null)
+
+        if (cachedId != null) {
+            try {
+                drive.files().get(cachedId).setFields("id").execute()
+                return cachedId
+            } catch (_: Exception) {
+                prefs.edit().remove("folder_id").apply()
+            }
+        }
+
+        val existing = drive.files().list()
+            .setQ(
+                "name = 'DriveCam' and " +
+                    "mimeType = 'application/vnd.google-apps.folder' and " +
+                    "trashed = false"
+            )
+            .setSpaces("drive")
+            .setFields("files(id,name)")
+            .setPageSize(1)
+            .execute()
+            .files
+
+        val folderId = if (existing.isNotEmpty()) {
+            existing[0].id
+        } else {
+            val folder = com.google.api.services.drive.model.File()
+                .setName("DriveCam")
+                .setMimeType("application/vnd.google-apps.folder")
+
+            drive.files().create(folder).setFields("id").execute().id
+        }
+
+        prefs.edit().putString("folder_id", folderId).apply()
+        return folderId
     }
 }
