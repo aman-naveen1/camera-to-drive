@@ -18,7 +18,7 @@ import kotlinx.coroutines.launch
 import java.util.concurrent.ConcurrentLinkedQueue
 
 class DriveUploader(private val context: Context) {
-    private val queue = ConcurrentLinkedQueue<File>()
+    private val queue = ConcurrentLinkedQueue<java.io.File>()
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     @Volatile private var running = false
 
@@ -75,7 +75,7 @@ class DriveUploader(private val context: Context) {
 
                 val folderId = getOrCreateFolder(drive)
 
-                val metadata = File()
+                val metadata = DriveFile()
                     .setName(file.name)
                     .setMimeType("video/mp4")
                     .setParents(listOf(folderId))
@@ -123,7 +123,7 @@ class DriveUploader(private val context: Context) {
         val folderId = if (existing.isNotEmpty()) {
             existing[0].id
         } else {
-            val folder = File()
+            val folder = DriveFile()
                 .setName("DriveCam")
                 .setMimeType("application/vnd.google-apps.folder")
 
