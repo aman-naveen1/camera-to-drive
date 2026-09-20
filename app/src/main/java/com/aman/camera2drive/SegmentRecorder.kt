@@ -27,6 +27,7 @@ class SegmentRecorder(
     private var current: Recording? = null
     private var active = false
     private var provider: ProcessCameraProvider? = null
+    private var videoCapture: VideoCapture<Recorder>? = null
     private val handler = Handler(context.mainLooper)
 
     fun start() {
@@ -51,6 +52,10 @@ class SegmentRecorder(
                 val cameraProvider = future.get()
                 provider = cameraProvider
 
+                // Prefer manufacturer-guaranteed FHD, then fall back cleanly.
+                // We intentionally don't blindly force the maximum sensor resolution:
+                // continuous 5-minute recording benefits from stable thermals, bitrate,
+                // storage and upload time.
                 val recorder = Recorder.Builder()
                     .setQualitySelector(
                         QualitySelector.fromOrderedList(
@@ -59,13 +64,31 @@ class SegmentRecorder(
                     )
                     .build()
 
-                val capture = VideoCapture.withOutput(recorder)
-                cameraProvider.unbindAll()
-                cameraProvider.bindToLifecycle(
+                var capture = VideoCapture.withOutput(recorder)
+
+                // Do NOT unbindAll(): the Activity owns the Preview use case.
+                // Keeping it bound gives the user a live view while recording.
+                var camera = cameraProvider.bindToLifecycle(
                     owner,
                     CameraSelector.DEFAULT_BACK_CAMERA,
                     capture
                 )
+
+                // CameraX exposes the device's actual stabilization capability.
+                // Rebuild only when supported so unsupported HALs aren't forced.
+                if (Recorder.getVideoCapabilities(camera.cameraInfo).isStabilizationSupported()) {
+                    cameraProvider.unbind(capture)
+                    capture = VideoCapture.Builder(recorder)
+                        .setVideoStabilizationEnabled(true)
+                        .build()
+                    camera = cameraProvider.bindToLifecycle(
+                        owner,
+                        CameraSelector.DEFAULT_BACK_CAMERA,
+                        capture
+                    )
+                }
+
+                videoCapture = capture
 
                 val dir = File(context.cacheDir, "segments").apply { mkdirs() }
                 val file = File(dir, "segment_" + System.currentTimeMillis() + ".mp4")
@@ -104,6 +127,12 @@ class SegmentRecorder(
         handler.removeCallbacksAndMessages(null)
         current?.stop()
         current = null
-        provider?.unbindAll()
+        videoCapture?.let { capture ->
+            try {
+                provider?.unbind(capture)
+            } catch (_: Exception) {
+            }
+        }
+        videoCapture = null
     }
 }
