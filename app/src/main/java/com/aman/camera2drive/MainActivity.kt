@@ -2,7 +2,6 @@ package com.aman.camera2drive
 
 import android.Manifest
 import android.content.Intent
-import android.content.MutableContextWrapper
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.os.Bundle
@@ -45,6 +44,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var focusHint: TextView
     private lateinit var record: Button
     private lateinit var signIn: Button
+    private lateinit var gestureLayer: View
 
     private val uiScope = MainScope()
     private val credentialManager by lazy { CredentialManager.create(this) }
@@ -89,6 +89,7 @@ class MainActivity : ComponentActivity() {
         focusHint = findViewById(R.id.focusHint)
         record = findViewById(R.id.recordButton)
         signIn = findViewById(R.id.signInButton)
+        gestureLayer = findViewById(R.id.gestureLayer)
 
         previewView.implementationMode = PreviewView.ImplementationMode.PERFORMANCE
 
@@ -156,9 +157,8 @@ class MainActivity : ComponentActivity() {
                     .addCredentialOption(option)
                     .build()
 
-                val contextWrapper = MutableContextWrapper(this@MainActivity)
                 val result = credentialManager.getCredential(
-                    context = contextWrapper,
+                    context = this@MainActivity,
                     request = request
                 )
 
