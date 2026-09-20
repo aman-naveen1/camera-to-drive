@@ -2,12 +2,12 @@ package com.aman.camera2drive
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
-import android.app.Service
 import android.content.Intent
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
+import androidx.lifecycle.LifecycleService
 
-class RecordingService : Service() {
+class RecordingService : LifecycleService() {
     companion object {
         const val ACTION_START = "start"
         const val ACTION_STOP = "stop"
