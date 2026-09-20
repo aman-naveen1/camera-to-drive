@@ -18,6 +18,9 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v4
 
+      - name: Build debug APK
+        run: gradle assembleDebug
+
       - name: Show debug signing SHA-1
         run: |
           echo "=== DEBUG SHA-1 ==="
@@ -26,9 +29,6 @@ jobs:
             -alias androiddebugkey \
             -storepass android \
             -keypass android | grep -E "Alias name:|SHA1:"
-
-      - name: Build debug APK
-        run: gradle assembleDebug
 
       - uses: actions/upload-artifact@v4
         with:
