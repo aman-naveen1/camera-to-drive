@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.view.View
+import com.aman.camera2drive.BuildConfig
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.core.content.ContextCompat
@@ -51,8 +52,11 @@ class SecurityActivity : Activity() {
             ),
             check(
                 "BUILD",
-                "This APK is a debug build and should not be treated as a production release",
-                "DEBUG"
+                if (BuildConfig.DEBUG)
+                    "Debug build • debugging features may be available"
+                else
+                    "Release build • production configuration",
+                if (BuildConfig.DEBUG) "DEBUG" else "RELEASE"
             )
         )
 
