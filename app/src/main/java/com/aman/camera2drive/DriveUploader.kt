@@ -5,11 +5,10 @@ import com.google.auth.oauth2.AccessToken
 import com.google.auth.oauth2.GoogleCredentials
 import com.google.api.client.http.FileContent
 import com.google.api.client.http.javanet.NetHttpTransport
-import com.google.api.client.googleapis.auth.oauth2.GoogleCredential
 import com.google.auth.http.HttpCredentialsAdapter
 import com.google.api.client.json.gson.GsonFactory
 import com.google.api.services.drive.Drive
-import com.google.api.services.drive.model.File
+import com.google.api.services.drive.model.File as DriveFile
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -23,7 +22,7 @@ class DriveUploader(private val context: Context) {
     @Volatile private var running = false
 
     init {
-        File(context.cacheDir, "segments")
+        java.io.File(context.cacheDir, "segments")
             .listFiles()
             ?.filter { it.isFile && it.extension.equals("mp4", ignoreCase = true) }
             ?.sortedBy { it.lastModified() }
