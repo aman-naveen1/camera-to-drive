@@ -1,42 +1,185 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#000000">
+    android:background="#050505"
+    android:keepScreenOn="true">
 
     <androidx.camera.view.PreviewView
         android:id="@+id/previewView"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"
+        android:contentDescription="Camera preview"
+        android:scaleType="centerCrop" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="180dp"
+        android:layout_gravity="top"
+        android:background="@drawable/top_scrim" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="300dp"
+        android:layout_gravity="bottom"
+        android:background="@drawable/bottom_scrim" />
 
     <LinearLayout
+        android:id="@+id/topBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="18dp"
+        android:paddingTop="18dp"
+        android:paddingEnd="18dp"
+        android:paddingBottom="8dp">
+
+        <TextView
+            android:id="@+id/drivePill"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:background="@drawable/pill_dark"
+            android:gravity="center"
+            android:paddingStart="14dp"
+            android:paddingEnd="14dp"
+            android:text="DRIVE • OFFLINE"
+            android:textColor="#FFFFFF"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+
+        <Space
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_weight="1" />
+
+        <TextView
+            android:id="@+id/qualityPill"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:background="@drawable/pill_dark"
+            android:gravity="center"
+            android:paddingStart="14dp"
+            android:paddingEnd="14dp"
+            android:text="AUTO • 1080P"
+            android:textColor="#FFFFFF"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/focusHint"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal|bottom"
+        android:layout_marginBottom="220dp"
+        android:alpha="0.0"
+        android:background="@drawable/pill_dark"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp"
+        android:text="FOCUS"
+        android:textColor="#FFFFFF"
+        android:textSize="11sp"
+        android:textStyle="bold" />
+
+    <LinearLayout
+        android:id="@+id/bottomControls"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
+        android:gravity="center_horizontal"
         android:orientation="vertical"
-        android:padding="24dp"
-        android:background="#B3000000">
+        android:paddingStart="24dp"
+        android:paddingEnd="24dp"
+        android:paddingBottom="28dp">
 
         <TextView
             android:id="@+id/statusText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="READY"
+            android:background="@drawable/pill_dark"
+            android:paddingStart="14dp"
+            android:paddingEnd="14dp"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"
+            android:text="READY • LOCAL CAMERA"
             android:textColor="#FFFFFF"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="8dp" />
+            android:textSize="11sp"
+            android:textStyle="bold" />
 
-        <Button
-            android:id="@+id/signInButton"
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Connect Google Drive" />
+            android:layout_height="72dp"
+            android:layout_marginTop="14dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
 
-        <Button
-            android:id="@+id/recordButton"
-            android:layout_width="match_parent"
+            <Button
+                android:id="@+id/signInButton"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:background="@drawable/control_button"
+                android:minHeight="0dp"
+                android:text="Connect Google"
+                android:textAllCaps="false"
+                android:textColor="#FFFFFF"
+                android:textSize="13sp" />
+
+            <Space
+                android:layout_width="22dp"
+                android:layout_height="1dp" />
+
+            <FrameLayout
+                android:layout_width="76dp"
+                android:layout_height="76dp">
+
+                <View
+                    android:layout_width="68dp"
+                    android:layout_height="68dp"
+                    android:layout_gravity="center"
+                    android:background="@drawable/record_outer" />
+
+                <Button
+                    android:id="@+id/recordButton"
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:layout_gravity="center"
+                    android:background="@drawable/record_inner"
+                    android:enabled="false"
+                    android:minHeight="0dp"
+                    android:minWidth="0dp"
+                    android:padding="0dp"
+                    android:text=""
+                    android:contentDescription="Start recording" />
+            </FrameLayout>
+
+            <Space
+                android:layout_width="22dp"
+                android:layout_height="1dp" />
+
+            <TextView
+                android:id="@+id/gestureHint"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:text="PINCH TO ZOOM&#10;TAP TO FOCUS"
+                android:textColor="#DDFFFFFF"
+                android:textSize="10sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/recordLabel"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:enabled="false"
-            android:text="Start recording" />
+            android:text="5-MINUTE DRIVE SEGMENTS"
+            android:textColor="#99FFFFFF"
+            android:textSize="10sp"
+            android:textStyle="bold" />
     </LinearLayout>
 </FrameLayout>
