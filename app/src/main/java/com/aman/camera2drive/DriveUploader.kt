@@ -1,19 +1,20 @@
 package com.aman.camera2drive
 
 import android.content.Context
-import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential
+import com.google.auth.oauth2.AccessToken
+import com.google.auth.oauth2.GoogleCredentials
 import com.google.api.client.http.FileContent
 import com.google.api.client.http.javanet.NetHttpTransport
+import com.google.api.client.googleapis.auth.oauth2.GoogleCredential
+import com.google.auth.http.HttpCredentialsAdapter
 import com.google.api.client.json.gson.GsonFactory
 import com.google.api.services.drive.Drive
-import com.google.api.services.drive.DriveScopes
+import com.google.api.services.drive.model.File
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import java.io.File
 import java.util.concurrent.ConcurrentLinkedQueue
 
 class DriveUploader(private val context: Context) {
@@ -29,7 +30,7 @@ class DriveUploader(private val context: Context) {
             ?.forEach { queue.add(it) }
     }
 
-    fun enqueue(file: File) {
+    fun enqueue(file: java.io.File) {
         if (!file.exists()) return
         queue.add(file)
         drain()
@@ -55,27 +56,26 @@ class DriveUploader(private val context: Context) {
         }
     }
 
-    private suspend fun upload(file: File): Boolean {
+    private suspend fun upload(file: java.io.File): Boolean {
         repeat(5) { attempt ->
             try {
-                val account = GoogleSignIn.getLastSignedInAccount(context) ?: return false
+                // AuthorizationClient returns a fresh cached/renewed access token
+                // after the user has granted drive.file in the foreground.
+                val accessToken = DriveAuth.getAccessToken(context) ?: return false
 
-                val credential = GoogleAccountCredential.usingOAuth2(
-                    context,
-                    listOf(DriveScopes.DRIVE_FILE)
-                ).apply {
-                    selectedAccount = account.account
-                }
+                val credential = GoogleCredentials.create(
+                    AccessToken(accessToken, null)
+                )
 
                 val drive = Drive.Builder(
                     NetHttpTransport(),
                     GsonFactory.getDefaultInstance(),
-                    credential
+                    HttpCredentialsAdapter(credential)
                 ).setApplicationName("DriveCam").build()
 
                 val folderId = getOrCreateFolder(drive)
 
-                val metadata = com.google.api.services.drive.model.File()
+                val metadata = File()
                     .setName(file.name)
                     .setMimeType("video/mp4")
                     .setParents(listOf(folderId))
@@ -89,6 +89,7 @@ class DriveUploader(private val context: Context) {
                     .setChunkSize(5 * 1024 * 1024)
                     .upload(request.buildHttpRequestUrl())
 
+                // Never delete a segment until Drive confirms the upload.
                 file.delete()
                 return true
             } catch (_: Exception) {
@@ -122,7 +123,7 @@ class DriveUploader(private val context: Context) {
         val folderId = if (existing.isNotEmpty()) {
             existing[0].id
         } else {
-            val folder = com.google.api.services.drive.model.File()
+            val folder = File()
                 .setName("DriveCam")
                 .setMimeType("application/vnd.google-apps.folder")
 
