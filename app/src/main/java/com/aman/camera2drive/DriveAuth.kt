@@ -10,14 +10,17 @@ object DriveAuth {
     private const val DRIVE_SCOPE = "https://www.googleapis.com/auth/drive.file"
 
     fun signIn(activity: Activity, ready: () -> Unit) {
-        if (GoogleSignIn.getLastSignedInAccount(activity) != null) {
+        val existing = GoogleSignIn.getLastSignedInAccount(activity)
+        if (existing != null && GoogleSignIn.hasPermissions(existing, Scope(DRIVE_SCOPE))) {
             ready()
             return
         }
+
         val options = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
             .requestEmail()
             .requestScopes(Scope(DRIVE_SCOPE))
             .build()
+
         activity.startActivityForResult(
             GoogleSignIn.getClient(activity, options).signInIntent,
             RC_SIGN_IN
