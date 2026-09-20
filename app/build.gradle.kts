@@ -39,22 +39,16 @@ android {
 dependencies {
     implementation("androidx.core:core-ktx:1.17.0")
     implementation("androidx.activity:activity-ktx:1.13.0")
-
-    // CameraX 1.6 uses the newer high-performance CameraPipe stack.
     implementation("androidx.camera:camera-camera2:1.6.2")
     implementation("androidx.camera:camera-lifecycle:1.6.2")
     implementation("androidx.camera:camera-video:1.6.2")
     implementation("androidx.camera:camera-view:1.6.2")
-
     implementation("androidx.lifecycle:lifecycle-service:2.9.3")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
-
-    // Modern Google Identity: Credential Manager + Drive AuthorizationClient.
     implementation("androidx.credentials:credentials:1.6.0")
     implementation("androidx.credentials:credentials-play-services-auth:1.6.0")
     implementation("com.google.android.libraries.identity.googleid:googleid:1.2.1")
     implementation("com.google.android.gms:play-services-auth:22.0.0")
-
     implementation("com.google.api-client:google-api-client-android:2.7.0")
     implementation("com.google.http-client:google-http-client-android:2.1.0")
     implementation("com.google.http-client:google-http-client-gson:2.1.0")
