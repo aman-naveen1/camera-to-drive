@@ -19,46 +19,70 @@ import com.google.android.gms.common.api.ApiException
 class MainActivity : ComponentActivity() {
     private lateinit var status: TextView
     private lateinit var record: Button
+    private lateinit var signIn: Button
 
     private val permissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
-    ) { startCamera() }
+    ) { results ->
+        val cameraGranted = results[Manifest.permission.CAMERA] == true ||
+            checkSelfPermission(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
+        val audioGranted = results[Manifest.permission.RECORD_AUDIO] == true ||
+            checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
+        if (cameraGranted && audioGranted) startCamera()
+        else status.text = "CAMERA + MICROPHONE PERMISSION REQUIRED"
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         status = findViewById(R.id.statusText)
         record = findViewById(R.id.recordButton)
+        signIn = findViewById(R.id.signInButton)
 
-        findViewById<Button>(R.id.signInButton).setOnClickListener {
+        signIn.setOnClickListener {
+            status.text = "CONNECTING TO GOOGLE DRIVE…"
             DriveAuth.signIn(this) { onDriveReady() }
         }
 
-        GoogleSignIn.getLastSignedInAccount(this)?.let { onDriveReady() }
+        if (GoogleSignIn.getLastSignedInAccount(this) != null) onDriveReady()
 
         record.setOnClickListener {
-            val i = Intent(this, RecordingService::class.java)
             if (record.text.toString().startsWith("Start")) {
-                i.action = RecordingService.ACTION_START
-                ContextCompat.startForegroundService(this, i)
-                status.text = "● RECORDING • 5 MIN FILES"
-                record.text = "Stop recording"
+                if (!hasCameraPermissions()) {
+                    status.text = "ALLOW CAMERA + MICROPHONE FIRST"
+                    permissionLauncher.launch(arrayOf(Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO))
+                    return@setOnClickListener
+                }
+                try {
+                    val intent = Intent(this, RecordingService::class.java)
+                        .setAction(RecordingService.ACTION_START)
+                    ContextCompat.startForegroundService(this, intent)
+                    status.text = "● RECORDING • UPLOADING"
+                    record.text = "Stop recording"
+                } catch (_: Exception) {
+                    status.text = "COULD NOT START RECORDING"
+                }
             } else {
-                i.action = RecordingService.ACTION_STOP
-                startService(i)
-                status.text = "READY"
+                val intent = Intent(this, RecordingService::class.java)
+                    .setAction(RecordingService.ACTION_STOP)
+                startService(intent)
+                status.text = "DRIVE CONNECTED • READY"
                 record.text = "Start recording"
             }
         }
 
-        val p = arrayOf(Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO)
-        if (p.any { checkSelfPermission(it) != PackageManager.PERMISSION_GRANTED }) {
-            permissionLauncher.launch(p)
+        if (!hasCameraPermissions()) {
+            permissionLauncher.launch(arrayOf(Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO))
         } else startCamera()
     }
 
+    private fun hasCameraPermissions(): Boolean =
+        checkSelfPermission(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED &&
+            checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
+
     private fun onDriveReady() {
-        status.text = "DRIVE CONNECTED"
+        status.text = "DRIVE CONNECTED • READY"
+        signIn.isEnabled = false
         record.isEnabled = true
     }
 
@@ -70,20 +94,24 @@ class MainActivity : ComponentActivity() {
                 onDriveReady()
             } catch (_: Exception) {
                 status.text = "GOOGLE SIGN-IN FAILED"
+                signIn.isEnabled = true
             }
         }
     }
 
     private fun startCamera() {
+        if (!hasCameraPermissions()) return
         val view = findViewById<PreviewView>(R.id.previewView)
         val future = ProcessCameraProvider.getInstance(this)
         future.addListener({
-            val provider = future.get()
-            val preview = Preview.Builder().build().also {
-                it.surfaceProvider = view.surfaceProvider
+            try {
+                val provider = future.get()
+                val preview = Preview.Builder().build().also { it.surfaceProvider = view.surfaceProvider }
+                provider.unbindAll()
+                provider.bindToLifecycle(this, CameraSelector.DEFAULT_BACK_CAMERA, preview)
+            } catch (_: Exception) {
+                status.text = "CAMERA INITIALIZATION FAILED"
             }
-            provider.unbindAll()
-            provider.bindToLifecycle(this, CameraSelector.DEFAULT_BACK_CAMERA, preview)
         }, ContextCompat.getMainExecutor(this))
     }
 }
