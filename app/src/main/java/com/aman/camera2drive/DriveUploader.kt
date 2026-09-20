@@ -4,6 +4,8 @@ import android.content.Context
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential
 import com.google.api.client.http.FileContent
+import com.google.api.client.http.javanet.NetHttpTransport
+import com.google.api.client.json.gson.GsonFactory
 import com.google.api.services.drive.Drive
 import com.google.api.services.drive.DriveScopes
 import kotlinx.coroutines.CoroutineScope
@@ -41,7 +43,6 @@ class DriveUploader(private val context: Context) {
                 while (true) {
                     val file = queue.poll() ?: break
                     if (!file.exists()) continue
-
                     if (!upload(file)) {
                         queue.add(file)
                         delay(10_000)
@@ -67,8 +68,8 @@ class DriveUploader(private val context: Context) {
                 }
 
                 val drive = Drive.Builder(
-                    com.google.api.client.extensions.android.http.AndroidHttp.newCompatibleTransport(),
-                    com.google.api.client.json.gson.GsonFactory.getDefaultInstance(),
+                    NetHttpTransport(),
+                    GsonFactory.getDefaultInstance(),
                     credential
                 ).setApplicationName("DriveCam").build()
 
@@ -111,11 +112,7 @@ class DriveUploader(private val context: Context) {
         }
 
         val existing = drive.files().list()
-            .setQ(
-                "name = 'DriveCam' and " +
-                    "mimeType = 'application/vnd.google-apps.folder' and " +
-                    "trashed = false"
-            )
+            .setQ("name = 'DriveCam' and mimeType = 'application/vnd.google-apps.folder' and trashed = false")
             .setSpaces("drive")
             .setFields("files(id,name)")
             .setPageSize(1)
@@ -129,7 +126,7 @@ class DriveUploader(private val context: Context) {
                 .setName("DriveCam")
                 .setMimeType("application/vnd.google-apps.folder")
 
-            drive.files().create(folder).setFields("id").execute().id
+            drive.files().create(folder, null).setFields("id").execute().id
         }
 
         prefs.edit().putString("folder_id", folderId).apply()
