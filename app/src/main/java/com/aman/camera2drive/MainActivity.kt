@@ -286,7 +286,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun installCameraGestures() {
-        previewView.setOnTouchListener(object : View.OnTouchListener {
+        gestureLayer.setOnTouchListener(object : View.OnTouchListener {
             private var initialDistance = 0f
             private var initialZoom = 1f
 
