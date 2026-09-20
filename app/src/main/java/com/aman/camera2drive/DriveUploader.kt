@@ -87,7 +87,7 @@ class DriveUploader(private val context: Context) {
                 request.getMediaHttpUploader()
                     .setDirectUploadEnabled(false)
                     .setChunkSize(5 * 1024 * 1024)
-                    .upload()
+                    .upload(request.buildHttpRequestUrl())
 
                 file.delete()
                 return true
