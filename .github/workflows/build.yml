@@ -22,13 +22,18 @@ jobs:
         run: gradle assembleDebug
 
       - name: Show debug signing SHA-1
+        continue-on-error: true
         run: |
           echo "=== DEBUG SHA-1 ==="
-          keytool -list -v \
-            -keystore "$HOME/.android/debug.keystore" \
-            -alias androiddebugkey \
-            -storepass android \
-            -keypass android | grep -E "Alias name:|SHA1:"
+          if [ -f "$HOME/.android/debug.keystore" ]; then
+            keytool -list -v \
+              -keystore "$HOME/.android/debug.keystore" \
+              -alias androiddebugkey \
+              -storepass android \
+              -keypass android | grep -E "Alias name:|SHA1:" || true
+          else
+            echo "Debug keystore not present on this runner; skipping SHA-1 display."
+          fi
 
       - uses: actions/upload-artifact@v4
         with:
