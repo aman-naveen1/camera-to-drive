@@ -3,6 +3,8 @@ package com.aman.camera2drive
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Intent
+import android.content.pm.ServiceInfo
+import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.lifecycle.LifecycleService
 
@@ -30,15 +32,25 @@ class RecordingService : LifecycleService() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
             ACTION_START -> {
-                startForeground(
-                    42,
-                    NotificationCompat.Builder(this, "drivecam")
-                        .setSmallIcon(android.R.drawable.presence_video_online)
-                        .setContentTitle("DriveCam recording")
-                        .setContentText("Recording and uploading 5-minute segments")
-                        .setOngoing(true)
-                        .build()
-                )
+                val notification = NotificationCompat.Builder(this, "drivecam")
+                    .setSmallIcon(android.R.drawable.presence_video_online)
+                    .setContentTitle("DriveCam recording")
+                    .setContentText("Recording + uploading 5-minute segments")
+                    .setOngoing(true)
+                    .setCategory(NotificationCompat.CATEGORY_SERVICE)
+                    .build()
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    startForeground(
+                        42,
+                        notification,
+                        ServiceInfo.FOREGROUND_SERVICE_TYPE_CAMERA or
+                            ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE
+                    )
+                } else {
+                    startForeground(42, notification)
+                }
+
                 segmentRecorder.start()
             }
 
