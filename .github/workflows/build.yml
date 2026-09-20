@@ -10,12 +10,26 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: "17"
+
       - uses: gradle/actions/setup-gradle@v4
-      - run: gradle assembleDebug
+
+      - name: Show debug signing SHA-1
+        run: |
+          echo "=== DEBUG SHA-1 ==="
+          keytool -list -v \
+            -keystore "$HOME/.android/debug.keystore" \
+            -alias androiddebugkey \
+            -storepass android \
+            -keypass android | grep -E "Alias name:|SHA1:"
+
+      - name: Build debug APK
+        run: gradle assembleDebug
+
       - uses: actions/upload-artifact@v4
         with:
           name: drivecam-debug-apk
