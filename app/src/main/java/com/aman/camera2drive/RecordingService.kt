@@ -3,7 +3,6 @@ package com.aman.camera2drive
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Intent
-import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import androidx.lifecycle.LifecycleService
 
@@ -42,6 +41,7 @@ class RecordingService : LifecycleService() {
                 )
                 segmentRecorder.start()
             }
+
             ACTION_STOP -> {
                 segmentRecorder.stop()
                 stopForeground(STOP_FOREGROUND_REMOVE)
@@ -50,6 +50,4 @@ class RecordingService : LifecycleService() {
         }
         return START_NOT_STICKY
     }
-
-    override fun onBind(intent: Intent?): IBinder? = null
 }
