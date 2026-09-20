@@ -59,7 +59,7 @@ class SegmentRecorder(
                 val recorder = Recorder.Builder()
                     .setQualitySelector(
                         QualitySelector.fromOrderedList(
-                            listOf(Quality.FHD, Quality.HD, Quality.SD)
+                            listOf(Quality.FHD, Quality.HD, Quality.SD, Quality.LOWEST)
                         )
                     )
                     .build()
