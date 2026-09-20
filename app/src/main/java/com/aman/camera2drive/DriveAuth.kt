@@ -7,6 +7,7 @@ import com.google.android.gms.common.api.Scope
 
 object DriveAuth {
     const val RC_SIGN_IN = 2401
+    private const val DRIVE_SCOPE = "https://www.googleapis.com/auth/drive.file"
 
     fun signIn(activity: Activity, ready: () -> Unit) {
         if (GoogleSignIn.getLastSignedInAccount(activity) != null) {
@@ -15,7 +16,7 @@ object DriveAuth {
         }
         val options = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
             .requestEmail()
-            .requestScopes(Scope("https://www.googleapis.com/auth/drive.file"))
+            .requestScopes(Scope(DRIVE_SCOPE))
             .build()
         activity.startActivityForResult(
             GoogleSignIn.getClient(activity, options).signInIntent,
