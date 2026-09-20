@@ -1,19 +1,49 @@
 # DriveCam
 
-5-minute-segment Android camera recorder for Google Drive.
+Lightweight Android camera recorder that writes rolling 5-minute MP4 segments and uploads them to a **DriveCam** folder in Google Drive.
 
-- CameraX preview
-- 5-minute MP4 segments
-- Microphone audio
-- Foreground recording service
-- Google Sign-In with drive.file scope
-- Upload queue/retry
-- Local file deleted only after successful Drive upload
+## Design goals
 
-## Google Cloud
-Create a Google Cloud project, enable Drive API, configure OAuth consent, and create an Android OAuth client for package `com.aman.camera2drive`.
+- CameraX 1.6 high-performance camera stack.
+- Simple camera-style UI instead of a full phone camera suite.
+- 1080p-class recording by default, with device capability fallback.
+- Device video stabilization is enabled when the camera reports support.
+- Tap-to-focus and pinch-to-zoom.
+- Preview stays visible while the foreground recording service records.
+- Local segment is deleted only after a successful Drive upload.
+- Resumable Drive uploads for unreliable mobile connections.
+- Credential Manager for Google sign-in.
+- Google AuthorizationClient for the narrow `drive.file` Drive permission.
+- Predictive Back is left to Android instead of implementing custom back-swipe logic.
+
+## Google setup
+
+The modern Credential Manager Google flow requires the **Web OAuth client ID** from the same Google Cloud project.
+
+Put it in:
+
+`app/src/main/res/values/strings.xml`
+
+Replace:
+
+`REPLACE_WITH_YOUR_WEB_CLIENT_ID.apps.googleusercontent.com`
+
+with your Web client ID.
+
+Keep the Android OAuth client configured for package:
+
+`com.aman.camera2drive`
+
+and the SHA-1 of the certificate used to sign the APK.
+
+The Drive permission remains `drive.file`, which is the narrow Drive scope used by this app.
 
 ## Build
-`gradle assembleDebug`
 
-The APK will be under `app/build/outputs/apk/debug/app-debug.apk`.
+```bash
+gradle assembleDebug
+```
+
+The debug APK is produced at:
+
+`app/build/outputs/apk/debug/app-debug.apk`
