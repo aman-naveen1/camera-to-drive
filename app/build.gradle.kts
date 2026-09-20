@@ -36,5 +36,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0")
     implementation("com.google.android.gms:play-services-auth:21.3.0")
     implementation("com.google.api-client:google-api-client-android:2.7.0")
+    implementation("com.google.http-client:google-http-client-android:2.1.0")
+    implementation("com.google.http-client:google-http-client-gson:2.1.0")
     implementation("com.google.apis:google-api-services-drive:v3-rev20260901-2.0.0")
 }
