@@ -91,6 +91,10 @@ class MainActivity : ComponentActivity() {
         signIn = findViewById(R.id.signInButton)
         gestureLayer = findViewById(R.id.gestureLayer)
 
+        findViewById<View>(R.id.securityButton).setOnClickListener {
+            startActivity(Intent(this, SecurityActivity::class.java))
+        }
+
         previewView.implementationMode = PreviewView.ImplementationMode.PERFORMANCE
 
         signIn.setOnClickListener {
